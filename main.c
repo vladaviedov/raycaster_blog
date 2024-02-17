@@ -7,7 +7,14 @@ int main() {
 	GLFWwindow *win = glfwCreateWindow(800, 600, "rc", NULL, NULL);
 	glfwMakeContextCurrent(win);
 
+	// GLFW loop
+	while (!glfwWindowShouldClose(win)) {
+		glfwSwapBuffers(win);
+		glfwPollEvents();
+	}
+
 	// Exit program
+	glfwDestroyWindow(win);
 	glfwTerminate();
 	return 0;
 }
