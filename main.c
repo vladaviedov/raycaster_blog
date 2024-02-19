@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GLFW/glfw3.h>
@@ -19,6 +21,7 @@ int world[WORLD_X][WORLD_Y] = {
 };
 
 void draw_2d();
+void draw_player(float x, float y, float angle);
 
 int main() {
 	glfwInit();
@@ -31,10 +34,16 @@ int main() {
 	glClearColor(0.3, 0.3, 0.3, 0);
 	gluOrtho2D(0, 800, 600, 0);
 
+	// Player
+	float player_x = 5.0f;
+	float player_y = 5.0f;
+	float view_angle = 0.0f;
+
 	// GLFW loop
 	while (!glfwWindowShouldClose(win)) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		draw_2d();
+		draw_player(player_x, player_y, view_angle);
 
 		glfwSwapBuffers(win);
 		glfwPollEvents();
@@ -72,4 +81,25 @@ void draw_2d() {
 			glEnd();
 		}
 	}
+}
+
+void draw_player(float x, float y, float angle) {
+	// Set line width
+	glLineWidth(4);
+
+	// Draw direction ray
+	glColor3f(1.0f, 1.0f, 1.0f);
+	glBegin(GL_LINES);
+	glVertex2f(x * 32, y * 32);
+	glVertex2f((x + cosf(angle)) * 32, (y + sinf(angle)) * 32);
+	glEnd();
+
+	// Set diameter for player circle
+	glPointSize(16);
+
+	// Draw player
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glBegin(GL_POINTS);
+	glVertex2f(x  * 32, y * 32);
+	glEnd();
 }

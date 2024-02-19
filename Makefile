@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -Wextra
-LDFLAGS=-lGL -lGLU -lglfw
+LDFLAGS=-lm -lGL -lGLU -lglfw
 
 OUT=rc
 OBJS=main.o
