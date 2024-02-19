@@ -6,6 +6,8 @@
 
 #define WORLD_X 10
 #define WORLD_Y 10
+#define MOVE_SPEED 0.05f
+#define TURN_SPEED 0.05f
 
 int world[WORLD_X][WORLD_Y] = {
 	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
@@ -22,6 +24,8 @@ int world[WORLD_X][WORLD_Y] = {
 
 void draw_2d();
 void draw_player(float x, float y, float angle);
+void handle_movement(GLFWwindow *win, float *x, float *y, float angle);
+void handle_turning(GLFWwindow *win, float *angle);
 
 int main() {
 	glfwInit();
@@ -44,6 +48,8 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		draw_2d();
 		draw_player(player_x, player_y, view_angle);
+		handle_turning(win, &view_angle);
+		handle_movement(win, &player_x, &player_y, view_angle);
 
 		glfwSwapBuffers(win);
 		glfwPollEvents();
@@ -102,4 +108,51 @@ void draw_player(float x, float y, float angle) {
 	glBegin(GL_POINTS);
 	glVertex2f(x  * 32, y * 32);
 	glEnd();
+}
+
+void handle_movement(GLFWwindow *win, float *x, float *y, float angle) {
+	int w = glfwGetKey(win, GLFW_KEY_W);
+	int a = glfwGetKey(win, GLFW_KEY_A);
+	int s = glfwGetKey(win, GLFW_KEY_S);
+	int d = glfwGetKey(win, GLFW_KEY_D);
+
+	// Forwards, 0 degrees
+	if (w && !s) {
+		*x += MOVE_SPEED * cosf(angle);
+		*y += MOVE_SPEED * sinf(angle);
+	}
+
+	// Backwards, 180 degrees
+	if (!w && s) {
+		*x += MOVE_SPEED * cosf(angle + M_PI);
+		*y += MOVE_SPEED * sinf(angle + M_PI);
+	}
+
+	// 'y' coordinates are flipped from what you would expect them to be
+	// Left, 270 degrees
+	if (a && !d) {
+		*x += MOVE_SPEED * cosf(angle + 3.0f * M_PI / 2.0f);
+		*y += MOVE_SPEED * sinf(angle + 3.0f * M_PI / 2.0f);
+	}
+
+	// Right, 90 degrees
+	if (!a && d) {
+		*x += MOVE_SPEED * cosf(angle + M_PI / 2.0f);
+		*y += MOVE_SPEED * sinf(angle + M_PI / 2.0f);
+	}
+}
+
+void handle_turning(GLFWwindow *win, float *angle) {
+	int q = glfwGetKey(win, GLFW_KEY_Q);
+	int e = glfwGetKey(win, GLFW_KEY_E);
+
+	// Turn left (counter-clockwise)
+	if (q && !e) {
+		*angle -= TURN_SPEED;
+	}
+
+	// Turn right (clockwise)
+	if (!q && e) {
+		*angle += TURN_SPEED;
+	}
 }
