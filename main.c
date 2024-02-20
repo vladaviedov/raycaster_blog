@@ -4,6 +4,8 @@
 #include <GL/glu.h>
 #include <GLFW/glfw3.h>
 
+#define SCREEN_WIDTH 800.0f
+#define SCREEN_HEIGHT 600.0f
 #define WORLD_X 10
 #define WORLD_Y 10
 #define MOVE_SPEED 0.05f
@@ -44,13 +46,13 @@ ray_result vcast(float x, float y, float angle);
 int main() {
 	glfwInit();
 
-	// Create a new window: height, width, window title
-	GLFWwindow *win = glfwCreateWindow(800, 600, "rc", NULL, NULL);
+	// Create a new window: width, height, window title
+	GLFWwindow *win = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "rc", NULL, NULL);
 	glfwMakeContextCurrent(win);
 
 	// Setup screen
 	glClearColor(0.3, 0.3, 0.3, 0);
-	gluOrtho2D(0, 800, 600, 0);
+	gluOrtho2D(0, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
 
 	// Player
 	float player_x = 5.0f;
