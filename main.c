@@ -22,10 +22,24 @@ int world[WORLD_X][WORLD_Y] = {
 	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
 };
 
+typedef enum {
+	HRZ,
+	VRT
+} cast_dir;
+
+typedef struct {
+	int success;
+	float distance;
+	cast_dir direction;
+} ray_result;
+
 void draw_2d();
 void draw_player(float x, float y, float angle);
 void handle_movement(GLFWwindow *win, float *x, float *y, float angle);
 void handle_turning(GLFWwindow *win, float *angle);
+ray_result raycast(float x, float y, float angle);
+ray_result hcast(float x, float y, float angle);
+ray_result vcast(float x, float y, float angle);
 
 int main() {
 	glfwInit();
@@ -155,4 +169,24 @@ void handle_turning(GLFWwindow *win, float *angle) {
 	if (!q && e) {
 		*angle += TURN_SPEED;
 	}
+}
+
+ray_result raycast(float x, float y, float angle) {
+	ray_result hres = hcast(x, y, angle);
+	ray_result vres = vcast(x, y, angle);
+
+	// Success on both - choose shortest
+	if (hres.success && vres.success) {
+		return hres.distance < vres.distance
+			? hres
+			: vres;
+	}
+
+	// Only vcast succeded
+	if (vres.success) {
+		return vres;
+	}
+
+	// Either hcast succeded or both failed
+	return hres;
 }
