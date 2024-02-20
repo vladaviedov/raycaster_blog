@@ -10,6 +10,7 @@
 #define WORLD_Y 10
 #define MOVE_SPEED 0.05f
 #define TURN_SPEED 0.05f
+#define MAX_DIST 100.0f
 
 int world[WORLD_X][WORLD_Y] = {
 	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
@@ -42,6 +43,8 @@ void handle_turning(GLFWwindow *win, float *angle);
 ray_result raycast(float x, float y, float angle);
 ray_result hcast(float x, float y, float angle);
 ray_result vcast(float x, float y, float angle);
+float distance(float x1, float y1, float x2, float y2);
+int near(float x1, float x2);
 
 int main() {
 	glfwInit();
@@ -191,4 +194,135 @@ ray_result raycast(float x, float y, float angle) {
 
 	// Either hcast succeded or both failed
 	return hres;
+}
+
+ray_result hcast(float x, float y, float angle) {
+	ray_result res = {
+		.success = 0,
+		.distance = 0,
+		.direction = HRZ
+	};
+
+	// Ray is horizontal - will never reach a horizontal line
+	if (near(angle, 0) || near(angle, M_PI)) {
+		return res;
+	}
+
+	// Before 180 degrees, we cast downwards
+	// After 180 degrees, we cast upwards
+	int trace_dir = angle > M_PI ? -1 : 1;
+
+	// Reach first boundary
+	float ry = trace_dir == 1 ? ceilf(y) : floorf(y);
+	float rx = x + (ry - y) / tanf(angle);
+	int celly = trace_dir == 1 ? ry : ry - 1;
+	int cellx = rx;
+
+	if (is_oob(cellx, celly)) {
+		return res;
+	}
+	int solid = world[cellx][celly];
+	float dist = distance(rx, ry, x, y);
+
+	// Already too far
+	if (dist > MAX_DIST) {
+		return res;
+	}
+
+	// Continue until out of range or solid hit
+	while (!solid && dist < MAX_DIST) {
+		ry += trace_dir;
+		rx += trace_dir / tanf(angle);
+		celly = trace_dir == 1 ? ry : ry - 1;
+		cellx = rx;
+
+		if (is_oob(cellx, celly)) {
+			return res;
+		}
+		solid = world[cellx][celly];
+		dist = distance(rx, ry, x, y);
+	}
+
+	// If in range, populate result
+	if (solid && dist < MAX_DIST) {
+		res.success = 1;
+		res.distance = dist;
+	}
+
+	return res;
+}
+
+ray_result vcast(float x, float y, float angle) {
+	ray_result res = {
+		.success = 0,
+		.distance = 0,
+		.direction = VRT
+	};
+
+	// Ray is vertical - will never reach a vertical line
+	if (near(angle, M_PI / 2) || near(angle, 3 * M_PI / 2)) {
+		return res;
+	}
+
+	// Between 90 and 270 degrees cast to the left
+	int trace_dir = angle > M_PI / 2 && angle < 3 * M_PI / 2 ? -1 : 1;
+
+	// Reach first boundary
+	float rx = trace_dir == 1 ? ceilf(x) : floorf(x);
+	float ry = y + (rx - x) * tanf(angle);
+	int cellx = trace_dir == 1 ? rx : rx - 1;
+	int celly = ry;
+
+	if (is_oob(cellx, celly)) {
+		return res;
+	}
+	int solid = world[cellx][celly];
+	float dist = distance(rx, ry, x, y);
+
+	// Already too far
+	if (dist > MAX_DIST) {
+		return res;
+	}
+
+	// Continue until out of range or solid hit
+	while (!solid && dist < MAX_DIST) {
+		rx += trace_dir;
+		ry += trace_dir * tanf(angle);
+		cellx = trace_dir == 1 ? rx : rx - 1;
+		celly = ry;
+
+		if (is_oob(cellx, celly)) {
+			return res;
+		}
+		solid = world[cellx][celly];
+		dist = distance(rx, ry, x, y);
+	}
+
+	// If in range, populate result
+	if (solid && dist < MAX_DIST) {
+		res.success = 1;
+		res.distance = dist;
+	}
+
+	return res;
+}
+
+float distance(float x1, float y1, float x2, float y2) {
+	return sqrtf(powf(x2 - x1, 2) + powf(y2 - y1, 2));
+}
+
+int near(float x1, float x2) {
+	return fabs(x1 - x2) < 0.001f;
+}
+
+int is_oob(int x, int y) {
+	if (x < 0 || y < 0) {
+		return 1;
+	}
+
+	if (x >= WORLD_X || y >= WORLD_Y) {
+		return 1;
+	}
+
+	return 0;
 }
