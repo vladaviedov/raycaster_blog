@@ -11,6 +11,9 @@
 #define MOVE_SPEED 0.05f
 #define TURN_SPEED 0.05f
 #define MAX_DIST 100.0f
+#define FOV_DEG 80.0f
+#define RAYS_PER_DEG 2
+#define DEG_TO_RAD (M_PI / 180)
 
 int world[WORLD_X][WORLD_Y] = {
 	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
@@ -45,6 +48,8 @@ ray_result hcast(float x, float y, float angle);
 ray_result vcast(float x, float y, float angle);
 float distance(float x1, float y1, float x2, float y2);
 int near(float x1, float x2);
+int is_oob(int x, int y);
+void draw_3d(float x, float y, float angle);
 
 int main() {
 	glfwInit();
@@ -65,8 +70,8 @@ int main() {
 	// GLFW loop
 	while (!glfwWindowShouldClose(win)) {
 		glClear(GL_COLOR_BUFFER_BIT);
-		draw_2d();
-		draw_player(player_x, player_y, view_angle);
+
+		draw_3d(player_x, player_y, view_angle);
 		handle_turning(win, &view_angle);
 		handle_movement(win, &player_x, &player_y, view_angle);
 
@@ -325,4 +330,40 @@ int is_oob(int x, int y) {
 	}
 
 	return 0;
+}
+
+void draw_3d(float x, float y, float angle) {
+	// Calculate line count and width
+	int rays = FOV_DEG * RAYS_PER_DEG;
+	float line_width = 800.0f / rays;
+
+	// Get starting angle
+	float start_angle = angle - (FOV_DEG * DEG_TO_RAD / 2.0f);
+	
+	// Change angle by this much each time
+	float angle_delta = DEG_TO_RAD / RAYS_PER_DEG;
+
+	// Cast rays and draw to screen
+	for (int i = 0; i < rays; i++) {
+		float current_angle = start_angle + i * angle_delta;
+		ray_result result = raycast(x, y, current_angle);
+		if (!result.success) {
+			continue;
+		}
+
+		// Set color
+		glColor3f(0.5f, 0.0f, 0.0f);
+
+		// The height is inversly proportional to distance
+		float height = 600.0f / result.distance;
+
+		// Draw rectangle
+		float start = line_width * i;
+		glBegin(GL_QUADS);
+		glVertex2f(start, (600.0f - height) / 2.0f);
+		glVertex2f(start + line_width, (600.0f - height) / 2.0f);
+		glVertex2f(start + line_width, (600.0f + height) / 2.0f);
+		glVertex2f(start, (600.0f + height) / 2.0f);
+		glEnd();
+	}
 }
