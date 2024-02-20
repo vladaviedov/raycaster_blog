@@ -50,6 +50,7 @@ float distance(float x1, float y1, float x2, float y2);
 int near(float x1, float x2);
 int is_oob(int x, int y);
 void draw_3d(float x, float y, float angle);
+float wrap_angle(float in);
 
 int main() {
 	glfwInit();
@@ -179,6 +180,9 @@ void handle_turning(GLFWwindow *win, float *angle) {
 	if (!q && e) {
 		*angle += TURN_SPEED;
 	}
+
+	// Fix angle to be in range
+	*angle = wrap_angle(*angle);
 }
 
 ray_result raycast(float x, float y, float angle) {
@@ -335,7 +339,7 @@ int is_oob(int x, int y) {
 void draw_3d(float x, float y, float angle) {
 	// Calculate line count and width
 	int rays = FOV_DEG * RAYS_PER_DEG;
-	float line_width = 800.0f / rays;
+	float line_width = SCREEN_WIDTH / rays;
 
 	// Get starting angle
 	float start_angle = angle - (FOV_DEG * DEG_TO_RAD / 2.0f);
@@ -345,7 +349,7 @@ void draw_3d(float x, float y, float angle) {
 
 	// Cast rays and draw to screen
 	for (int i = 0; i < rays; i++) {
-		float current_angle = start_angle + i * angle_delta;
+		float current_angle = wrap_angle(start_angle + i * angle_delta);
 		ray_result result = raycast(x, y, current_angle);
 		if (!result.success) {
 			continue;
@@ -355,15 +359,19 @@ void draw_3d(float x, float y, float angle) {
 		glColor3f(0.5f, 0.0f, 0.0f);
 
 		// The height is inversly proportional to distance
-		float height = 600.0f / result.distance;
+		float height = SCREEN_HEIGHT / result.distance;
 
-		// Draw rectangle
+		// Draw a vertically centered rectangle
 		float start = line_width * i;
 		glBegin(GL_QUADS);
-		glVertex2f(start, (600.0f - height) / 2.0f);
-		glVertex2f(start + line_width, (600.0f - height) / 2.0f);
-		glVertex2f(start + line_width, (600.0f + height) / 2.0f);
-		glVertex2f(start, (600.0f + height) / 2.0f);
+		glVertex2f(start, (SCREEN_HEIGHT - height) / 2.0f);
+		glVertex2f(start + line_width, (SCREEN_HEIGHT - height) / 2.0f);
+		glVertex2f(start + line_width, (SCREEN_HEIGHT + height) / 2.0f);
+		glVertex2f(start, (SCREEN_HEIGHT + height) / 2.0f);
 		glEnd();
 	}
+}
+
+float wrap_angle(float in) {
+	return in - 2 * M_PI * floorf(in / (2 * M_PI));
 }
