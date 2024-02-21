@@ -359,7 +359,8 @@ void draw_3d(float x, float y, float angle) {
 		glColor3f(0.5f, 0.0f, 0.0f);
 
 		// The height is inversly proportional to distance
-		float height = SCREEN_HEIGHT / result.distance;
+		float adj_distance = result.distance * cosf(angle - current_angle);
+		float height = SCREEN_HEIGHT / adj_distance;
 
 		// Draw a vertically centered rectangle
 		float start = line_width * i;
