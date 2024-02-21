@@ -51,6 +51,7 @@ int near(float x1, float x2);
 int is_oob(int x, int y);
 void draw_3d(float x, float y, float angle);
 float wrap_angle(float in);
+void draw_floor();
 
 int main() {
 	glfwInit();
@@ -72,6 +73,7 @@ int main() {
 	while (!glfwWindowShouldClose(win)) {
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		draw_floor();
 		draw_3d(player_x, player_y, view_angle);
 		handle_turning(win, &view_angle);
 		handle_movement(win, &player_x, &player_y, view_angle);
@@ -357,6 +359,11 @@ void draw_3d(float x, float y, float angle) {
 
 		// Set color
 		glColor3f(0.5f, 0.0f, 0.0f);
+		if (result.direction == HRZ) {
+			glColor3f(0.5f, 0.0f, 0.0f);
+		} else {
+			glColor3f(0.7f, 0.0f, 0.0f);
+		}
 
 		// The height is inversly proportional to distance
 		float adj_distance = result.distance * cosf(angle - current_angle);
@@ -375,4 +382,15 @@ void draw_3d(float x, float y, float angle) {
 
 float wrap_angle(float in) {
 	return in - 2 * M_PI * floorf(in / (2 * M_PI));
+}
+
+void draw_floor() {
+	glColor3f(0.0f, 0.0f, 0.4f);
+
+	glBegin(GL_QUADS);
+	glVertex2i(0, SCREEN_HEIGHT / 2);
+	glVertex2i(SCREEN_WIDTH, SCREEN_HEIGHT / 2);
+	glVertex2i(SCREEN_WIDTH, SCREEN_HEIGHT);
+	glVertex2i(0, SCREEN_HEIGHT);
+	glEnd();
 }
